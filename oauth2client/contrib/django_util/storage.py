@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oauth2client.contrib.dictionary_storage import DictionaryStorage
+from django.utils.module_loading import import_string
+from django.conf import settings
+
+from oauth2client.contrib.django_orm import Storage as DjangoORMStorage
 
 _CREDENTIALS_KEY = 'google_oauth2_credentials'
 
@@ -24,4 +27,8 @@ def get_storage(request):
     :param request: Reference to the current request object
     :return: A OAuth2Client Storage implementation based on sessions
     """
-    return DictionaryStorage(request.session, key=_CREDENTIALS_KEY)
+    model_class_path = getattr(settings, 'GOOGLE_OAUTH2_STORAGE_MODEL')
+    model_class = import_string(model_class_path)
+    credentials_field = getattr(settings, 'GOOGLE_OAUTH2_STORAGE_MODEL_FIELD')
+
+    return DjangoORMStorage(model_class, 'pk', 1, credentials_field)
