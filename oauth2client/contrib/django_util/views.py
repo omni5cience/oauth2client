@@ -28,6 +28,11 @@ _CSRF_KEY = 'google_oauth2_csrf_token'
 _FLOW_KEY = 'google_oauth2_flow_{0}'
 
 
+def _flow_from_json(json_dict):
+    client_id = json_dict.pop('client_id')
+    return client.OAuth2WebServerFlow(client_id, **json_dict)
+
+
 def _make_flow(request, scopes, return_url=None):
     """Creates a Web Server Flow"""
     # Generate a CSRF token to prevent malicious requests.
@@ -49,15 +54,15 @@ def _make_flow(request, scopes, return_url=None):
             urlresolvers.reverse("google_oauth:callback")))
 
     flow_key = _FLOW_KEY.format(csrf_token)
-    request.session[flow_key] = pickle.dumps(flow)
+    request.session[flow_key] = flow.__dict__
     return flow
 
 
 def _get_flow_for_token(csrf_token, request):
     """ Looks up the flow in session to recover information about requested
     scopes."""
-    flow_pickle = request.session.get(_FLOW_KEY.format(csrf_token), None)
-    return None if flow_pickle is None else pickle.loads(flow_pickle)
+    flow_json = request.session.get(_FLOW_KEY.format(csrf_token), None)
+    return None if flow_json is None else _flow_from_json(flow_json)
 
 
 def oauth2_callback(request):
