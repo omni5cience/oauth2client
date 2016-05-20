@@ -51,7 +51,8 @@ def _make_flow(request, scopes, return_url=None):
         scope=scopes,
         state=state,
         redirect_uri=request.build_absolute_uri(
-            urlresolvers.reverse("google_oauth:callback")))
+            urlresolvers.reverse("google_oauth:callback")),
+        approval_prompt='force')
 
     flow_key = _FLOW_KEY.format(csrf_token)
     request.session[flow_key] = flow.__dict__
